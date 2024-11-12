@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import '@styles/app.scss';
 import icons from '@components/icons';
 
-const Application: React.FC = () => {
+const App: React.FC = () => {
   const [counter, setCounter] = useState(0);
   const [darkTheme, setDarkTheme] = useState(true);
   const [versions, setVersions] = useState<Record<string, string>>({});
@@ -136,4 +136,4 @@ const Application: React.FC = () => {
   );
 };
 
-export default Application;
+export default App;
