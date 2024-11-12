@@ -9,147 +9,178 @@ import LoginModal from '@components/LoginModal';
 import SidePanel from '@components/SidePanel';
 import { WebSocketService } from '@components/WebSocketService';
 
+type ChatMessage = [MessageType, string];
+
 const App: React.FC = () => 
-{
-
-
+  {
+      const [message, setMessage] = useState<string>('');
+      const [chat, setChat] = useState<ChatMessage[]>([]); 
+      const inputParser = new InputParser();
+      const wsManager = useRef<WebSocketService | null>(null);
+      const [isLoggedIn, setIsLoggedIn] = useState(false);
   
-  const [counter, setCounter] = useState(0);
-  const [darkTheme, setDarkTheme] = useState(true);
-  const [versions, setVersions] = useState<Record<string, string>>({});
-
-  /**
-   * On component mount
-   */
-  useEffect(() => {
-    const useDarkTheme = parseInt(localStorage.getItem('dark-mode'));
-    if (isNaN(useDarkTheme)) {
-      setDarkTheme(true);
-    } else if (useDarkTheme == 1) {
-      setDarkTheme(true);
-    } else if (useDarkTheme == 0) {
-      setDarkTheme(false);
-    }
-
-    // Apply verisons
-    const app = document.getElementById('app');
-    const versions = JSON.parse(app.getAttribute('data-versions'));
-    setVersions(versions);
-  }, []);
-
-  /**
-   * On Dark theme change
-   */
-  useEffect(() => {
-    if (darkTheme) {
-      localStorage.setItem('dark-mode', '1');
-      document.body.classList.add('dark-mode');
-    } else {
-      localStorage.setItem('dark-mode', '0');
-      document.body.classList.remove('dark-mode');
-    }
-  }, [darkTheme]);
-
-  /**
-   * Toggle Theme
-   */
-  function toggleTheme() {
-    setDarkTheme(!darkTheme);
+      useEffect(() =>
+      {
+          return () => 
+          {
+              wsManager.current?.close();
+          };
+      }, [wsManager]);
+  
+      const printMessage = (msg: ChatMessage) =>
+      {
+          console.log(msg);
+          setChat([...chat, msg]);
+          setMessage('');
+      };
+  
+      const doConnect = (host: string, port: number) =>
+      {
+          wsManager.current = new WebSocketService(`ws://${host}:${port}/ws`);
+          wsManager.current.connect();
+          printMessage([MessageType.COMMAND, 'Connected to WebSocket']);
+      };
+  
+      const doDisconnect = () =>
+      {
+          wsManager.current?.close();
+          wsManager.current = null;
+          printMessage([MessageType.COMMAND, 'Disconnected from WebSocket']);
+      };
+  
+      const doHelp = () =>
+      {
+          printMessage([MessageType.COMMAND, 'Help command received']);
+      };
+  
+      const doCommand = (parsedMessage: ParsedMessage) =>
+      {
+          if (parsedMessage.type !== MessageType.COMMAND) return; // should never happen
+          switch (parsedMessage.command)
+          {
+              case Commands.LOGIN:
+                  // host: localhost, port: 8000
+                  if (parsedMessage.args.length !== 2)
+                  {
+                      printMessage([MessageType.INVALID_COMMAND, 'Invalid number of arguments for login command']);
+                      return;
+                  }
+                  doConnect(parsedMessage.args[0], parseInt(parsedMessage.args[1]));
+                  break;
+              case Commands.LOGOUT:
+                  doDisconnect();
+                  break;
+              case Commands.HELP:
+                  doHelp();
+                  break;
+              default:
+                  console.error('Invalid command received:', parsedMessage.command);
+                  break;
+          }
+      };
+  
+      const handleSendMessage = () => 
+      {
+          if (message.trim()) 
+          {
+              const parsedMessage = inputParser.parseMessage(message);
+              if (parsedMessage.type === MessageType.TEXT_MESSAGE) 
+              {
+                  console.log('Valid message:', parsedMessage);
+                  wsManager.current?.sendMessage(parsedMessage.text);
+                  printMessage([MessageType.TEXT_MESSAGE, parsedMessage.text]);
+              }
+              else if (parsedMessage.type === MessageType.COMMAND)
+              {
+                  doCommand(parsedMessage);
+              }
+              else if (parsedMessage.type === MessageType.INVALID_COMMAND)
+              {
+                  console.log('Invalid command:', parsedMessage);
+                  printMessage([MessageType.INVALID_COMMAND, parsedMessage.text]);
+              }
+          }
+      };
+  
+      const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) =>
+      {
+          if (event.key === 'Enter') handleSendMessage();
+      };
+  
+      const handleLogin = (websocket: WebSocketService) =>
+      {
+          wsManager.current = websocket;
+          setIsLoggedIn(true);
+          printMessage([MessageType.COMMAND, 'Connected to WebSocket']);
+      }
+  
+      return (
+          <div className="App">
+              {!isLoggedIn && (
+                  <LoginModal onLogin={handleLogin} showModal={!isLoggedIn} />
+              )}
+  
+              <div className="chat-page">
+                  <SidePanel/>
+  
+                  {/* Sidebar */}
+                  <div className="sidebar">
+                      <h2>Contacts</h2>
+                      <ul>
+                          <li>User 1</li>
+                          <li>User 2</li>
+                          <li>User 3</li>
+                      </ul>
+                  </div>
+  
+                  {/* Main Chat Window */}
+                  <div className="main-window">
+                      <div className="chat-window">
+                          {
+                              chat.map((msg, index) => 
+                              {
+                                  if (msg[0] === MessageType.TEXT_MESSAGE)
+                                  {
+                                      return (
+                                          <div key={index} className="chat-message user-message">
+                                              {msg[1]}
+                                          </div>
+                                      )
+                                  }
+                                  else if (msg[0] === MessageType.COMMAND)
+                                  {
+                                      return (
+                                          <div key={index} className="command-message bot-message">
+                                              {msg[1]}
+                                          </div>
+                                      )
+                                  }
+  
+                                  return (
+                                      <div key={index} className="invalid-command-message bot-message">
+                                          {msg[1]}
+                                      </div>
+                                  )
+                              })
+                          }
+                      </div>
+  
+                      {/* Input Area */}
+                      <div className="input-area">
+                          <input
+                              type="text"
+                              value={message}
+                              onChange={(e) => setMessage(e.target.value)}
+                              onKeyDown={handleKeyDown}
+                              placeholder="Type your message..."
+                          />
+                          <button onClick={handleSendMessage}>Send</button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      );
   }
-
-  return (
-    <div id='erwt'>
-      <div className='header'>
-        <div className='main-heading'>
-          <h1 className='themed'>ERWT - Electron Boilerplate</h1>
-        </div>
-        <div className='main-teaser'>
-          Desktop Application with Electron, React, Webpack & TypeScript
-        </div>
-        <div className='versions'>
-          <div className='item'>
-            <div>
-              <img className='item-icon' src={icons.electron} /> Electron
-            </div>
-            <span>{versions?.electron}</span>
-          </div>
-          <div className='item'>
-            <div>
-              <img className='item-icon' src={icons.erwt} /> ERWT
-            </div>
-            <span>{versions?.erwt}</span>
-          </div>
-          <div className='item'>
-            <div>
-              <img className='item-icon' src={icons.typescript} /> Typescript
-            </div>
-            <span>{versions?.typescript}</span>
-          </div>
-          <div className='item'>
-            <div>
-              <img className='item-icon' src={icons.nodejs} /> Nodejs
-            </div>
-            <span>{versions?.node}</span>
-          </div>
-          <div className='item'>
-            <div>
-              <img className='item-icon' src={icons.react} /> React
-            </div>
-            <span>{versions?.react}</span>
-          </div>
-          <div className='item'>
-            <div>
-              <img className='item-icon' src={icons.webpack} /> Webpack
-            </div>
-            <span>{versions?.webpack}</span>
-          </div>
-          <div className='item'>
-            <div>
-              <img className='item-icon' src={icons.chrome} /> Chrome
-            </div>
-            <span>{versions?.chrome}</span>
-          </div>
-          <div className='item'>
-            <div>
-              <img className='item-icon' src={icons.license} /> License
-            </div>
-            <span>{versions?.license}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className='footer'>
-        <div className='center'>
-          <button
-            onClick={() => {
-              if (counter > 99) return alert('Going too high!!');
-              setCounter(counter + 1);
-            }}
-          >
-            Increment {counter != 0 ? counter : ''} <span>{counter}</span>
-          </button>
-          &nbsp;&nbsp; &nbsp;&nbsp;
-          <button
-            onClick={() => {
-              if (counter == 0) return alert('Oops.. thats not possible!');
-              setCounter(counter > 0 ? counter - 1 : 0);
-            }}
-          >
-            Decrement <span>{counter}</span>
-          </button>
-          &nbsp;&nbsp; &nbsp;&nbsp;
-          <button onClick={toggleTheme}>
-            {darkTheme ? 'Light Theme' : 'Dark Theme'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-
-
-
-
-};
-
-export default App;
+  
+  export default App;
+  
