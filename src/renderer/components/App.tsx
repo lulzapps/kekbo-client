@@ -1,8 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '@styles/app.scss';
+import '@styles/App.css'
 import icons from '@components/icons';
 
-const App: React.FC = () => {
+import { InputParser, MessageType, ParsedMessage } from '@components/InputParser';
+import { Commands } from '@components/Commands';
+import LoginModal from '@components/LoginModal';
+import SidePanel from '@components/SidePanel';
+import { WebSocketService } from '@components/WebSocketService';
+
+const App: React.FC = () => 
+{
+
+
+  
   const [counter, setCounter] = useState(0);
   const [darkTheme, setDarkTheme] = useState(true);
   const [versions, setVersions] = useState<Record<string, string>>({});
@@ -134,6 +145,11 @@ const App: React.FC = () => {
       </div>
     </div>
   );
+
+
+
+
+
 };
 
 export default App;
