@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import '@styles/App.css';  
 import '@styles/LoginModal.css';
 import { WebSocketService } from '@components/WebSocketService';
+// import { ipcRenderer } from 'electron';
+// import { helloWorldContext } from '@components/HelloWorld';  
 
 const parseHostAndPort = (input: string) => 
 {
@@ -40,6 +42,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ onLogin, showModal }) =>
 
     const handleLogin = async () => 
     {
+        console.log("dear god help me and this mess of code");
+        
+        (window as any).electron_window?.api2.doLogin2();
+
         console.log('username:', username);
         console.log('password:', password);
         console.log('host:', host);

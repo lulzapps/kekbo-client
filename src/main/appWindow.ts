@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { registerTitlebarIpc } from '@main/window/titlebarIpc';
 
@@ -54,10 +54,15 @@ export function createAppWindow(): BrowserWindow {
 /**
  * Register Inter Process Communication
  */
-function registerMainIPC() {
+function registerMainIPC() 
+{
   /**
    * Here you can assign IPC related codes for the application window
    * to Communicate asynchronously from the main process to renderer processes.
    */
   registerTitlebarIpc(appWindow);
+  ipcMain.handle('do-login', () => 
+  {
+    console.log('do-login#@$*%(#@$*%#$*%($#*%($#*%$#(*%$#(* ');
+  });
 }
