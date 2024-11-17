@@ -44,7 +44,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ onLogin, showModal }) =>
     {
         console.log("dear god help me and this mess of code");
         
-        (window as any).electron_window?.api2.doLogin2();
+        // (window as any).electron_window?.api2.doLogin2();
+        (window as any).electron_window2?.api22.doLogin2(username, password, host);
 
         console.log('username:', username);
         console.log('password:', password);

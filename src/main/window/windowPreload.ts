@@ -11,13 +11,19 @@ contextBridge.exposeInMainWorld('electron_window',
     {
       doLogin2: (): void =>
       {
-        ipcRenderer.invoke('do-login');
+        ipcRenderer.invoke('do-login55');
       }
     }
   });
 
-// contextBridge.exposeInMainWorld('api', {
-//   getUserData: async (): Promise<any> => {
-//     return ipcRenderer.invoke('getUserData');
-//   },
-// });
+contextBridge.exposeInMainWorld('electron_window2', 
+  {
+    api22: 
+    {
+      doLogin2: (username: string, password: string, host: string): void =>
+      {
+        ipcRenderer.invoke('do-login222x', username, password, host);
+      }
+    }
+  }
+);
