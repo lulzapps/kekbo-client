@@ -34,6 +34,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onLogin, showModal }) =>
     const [password, setPassword] = useState('');
     const [host, setHost] = useState('localhost:8000');
     const [status, setStatus] = useState(''); 
+    var windowAPI = (window as any).electron_window2;
 
     if (!showModal) 
     {
@@ -42,47 +43,45 @@ const LoginModal: React.FC<LoginModalProps> = ({ onLogin, showModal }) =>
 
     const handleLogin = async () => 
     {
-        console.log("dear god help me and this mess of code");
-        
-        // (window as any).electron_window?.api2.doLogin2();
-        (window as any).electron_window2?.api22.doLogin2(username, password, host);
-
-        console.log('username:', username);
-        console.log('password:', password);
-        console.log('host:', host);
         const result = parseHostAndPort(host);
+        await windowAPI.api22.doLogin2(username, password, result.host, result.port);
 
-        if (!result.host.includes('.') && result.host !== 'localhost') 
-        {
-            setStatus('Invalid host');
-            return;
-        }
+        // console.log('username:', username);
+        // console.log('password:', password);
+        // console.log('host:', host);
+        
 
-        try
-        {
-            const websocket = new WebSocketService(`ws://${result.host}:${result.port}/ws`);
-            await websocket.connect();
+        // if (!result.host.includes('.') && result.host !== 'localhost') 
+        // {
+        //     setStatus('Invalid host');
+        //     return;
+        // }
 
-            if (await validateUser(username, password, websocket) === false)
-            {
-                setStatus('Invalid username or password');
-                return;
-            }
+        // try
+        // {
+        //     const websocket = new WebSocketService(`ws://${result.host}:${result.port}/ws`);
+        //     await websocket.connect();
 
-            onLogin(websocket);
-        }
-        catch (error)
-        {
-            if (error instanceof Error) 
-            {
-                // If there is an error, update the status to show the error message
-                setStatus('Failed to connect to WebSocket: ' + error.message);
-            } 
-            else 
-            {
-                setStatus('An unknown error occurred');
-            }
-        }
+        //     if (await validateUser(username, password, websocket) === false)
+        //     {
+        //         setStatus('Invalid username or password');
+        //         return;
+        //     }
+
+        //     onLogin(websocket);
+        // }
+        // catch (error)
+        // {
+        //     if (error instanceof Error) 
+        //     {
+        //         // If there is an error, update the status to show the error message
+        //         setStatus('Failed to connect to WebSocket: ' + error.message);
+        //     } 
+        //     else 
+        //     {
+        //         setStatus('An unknown error occurred');
+        //     }
+        // }
     };
 
     return (

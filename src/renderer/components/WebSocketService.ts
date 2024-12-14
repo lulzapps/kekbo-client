@@ -1,4 +1,6 @@
 // src/services/WebSocketService.ts
+import WebSocket from 'ws';
+// import { WebSocketServer } from 'ws';
 
 export class WebSocketService 
 {
@@ -14,7 +16,12 @@ export class WebSocketService
     {
         return new Promise((resolve, reject) => 
         {
+            console.log("Connecting to WebSocket");
             this.socket = new WebSocket(this.url);
+            this.socket.addEventListener("open", (event) => 
+            {
+                console.log("WebSocket connected YES YES YES!!!");
+            });
 
             // Handle connection open
             this.socket.onopen = () => 
@@ -58,7 +65,7 @@ export class WebSocketService
         } 
         else 
         {
-            console.error('WebSocket is not connected');
+            console.error('WebSocket is not connected :(');
         }
     }
 
@@ -75,7 +82,7 @@ export class WebSocketService
             // Set up the message handler
             this.socket.onmessage = (event) => 
             {
-                resolve(event.data);
+                resolve(event.data.toString());
             };
 
             // Handle errors

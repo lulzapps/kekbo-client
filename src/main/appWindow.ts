@@ -52,15 +52,10 @@ export function createAppWindow(): BrowserWindow {
   return appWindow;
 }
 
-/**
- * Register Inter Process Communication
- */
+// This function is called from the main process to register IPC
 function registerMainIPC() 
 {
-  /**
-   * Here you can assign IPC related codes for the application window
-   * to Communicate asynchronously from the main process to renderer processes.
-   */
+  console.log('Registering IPC for Main Process');
   registerTitlebarIpc(appWindow);
   registerWebsocketIpc();
 

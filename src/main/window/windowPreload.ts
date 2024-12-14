@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer  } from 'electron';
 import titlebarContext from './titlebarContext';
 import helloWorldContext from '@components/HelloWorld';
 
-console.log("I AM AM PRELOAD SCRIPT AND I AM PROUD!!!!!");
+// This is called from the renderer process to register IPC
 
 contextBridge.exposeInMainWorld('electron_window', 
   {
@@ -20,9 +20,10 @@ contextBridge.exposeInMainWorld('electron_window2',
   {
     api22: 
     {
-      doLogin2: (username: string, password: string, host: string): void =>
+      doLogin2: (username: string, password: string, host: string, port: string): void =>
       {
-        ipcRenderer.invoke('do-login222x', username, password, host);
+        console.log("THIS IS BEING CALLED FROM THE RENDER PROCESS");
+        ipcRenderer.invoke('do-login222x', username, password, host, port);
       }
     }
   }
